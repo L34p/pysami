@@ -8,6 +8,7 @@ from subprocess import check_output
 
 import re
 from pysami.subtitle import Subtitle
+import chardet
 
 class SmiFile:
 	def __init__(self, input_file, encoding=None):
@@ -21,8 +22,9 @@ class SmiFile:
 				file = open(input_file, encoding=encoding)
 				self.raw = file.read()
 			else:
-				detector = ['/usr/bin/env', 'uchardet', input_file]
-				encoding_detected = check_output(detector).decode('utf-8').strip().lower()
+				file = open(input_file, 'rb')
+				chdt = chardet.detect(file.read())
+				encoding_detected = chdt['encoding'].strip().lower()
 
 				try:
 					file = open(input_file, encoding=encoding_detected)
@@ -50,8 +52,10 @@ class SmiFile:
 			))[1:]
 
 		def parse_p(item):
-			lang = search(item, '<p(.+)class=([a-z]+)').group(2)
-
+			try:
+				lang = search(item, '<p(.+)class=([a-z]+)').group(2)
+			except:
+				lang = 'KRCC'
 			content = item[search(item, '<p(.+)>').end():]
 			content = content.replace('\n', '')
 			content = re.sub('<br ?/?>', '\n', content, flags=re.I)
@@ -68,7 +72,12 @@ class SmiFile:
 				if verbose:
 					print(str(sub_index)+' ===\n'+item+'\n')
 
-				timecode = search(item, '<sync start=([0-9]+)').group(1)
+				try:
+					timecode = search(item, '<sync start=([0-9]+)').group(1)
+				except:
+					print("ERROR on {}".format(timecode))
+					raise ConversionError(-3)
+
 				content = dict(map(parse_p, split_content(item, 'p')))
 
 				self.data.append([timecode, content])
