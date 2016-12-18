@@ -12,10 +12,6 @@ Installation
 git clone https://github.com/g6123/pysami.git
 cd pysami
 sudo python3 setup.py install
-
-# To use auto charset detection, you should install uchardet.
-sudo apt-get update
-sudo apt-get install uchardet
 ```
 
 Classes
